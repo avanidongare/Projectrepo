@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f1">
+  <meta name="description" content="Thoughtful things for everyday living. Shop the Northstar collection.">
+  <title>Northstar — Good things, thoughtfully found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="announcement">A little something extra: free shipping on orders over $75 <span aria-hidden="true">✦</span></div>
+  <header class="site-header">
+    <a class="wordmark" href="#" aria-label="Northstar home"><span class="star">✳</span> northstar<span class="wordmark-dot">.</span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#shop">Shop all</a><a href="#shop" data-nav-category="Home">Home</a><a href="#shop" data-nav-category="Lifestyle">Lifestyle</a><a href="#shop" data-nav-category="Electronics">Tech</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button search-toggle" aria-label="Search products" title="Search">⌕</button>
+      <button class="bag-button" id="bag-open" aria-label="Open shopping bag">Bag <span id="bag-count">0</span></button>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="eyebrow-line"></span> A more thoughtful kind of shop</span>
+        <h1>Good things,<br><em>thoughtfully</em><br>found.</h1>
+        <p>Everyday essentials with a little more intention. Made to be used, loved, and kept.</p>
+        <a class="button button-dark" href="#shop">Explore the collection <span>↗</span></a>
+        <div class="hero-note"><span class="note-avatars"><i>J</i><i>A</i><i>M</i></span><span>Loved by 2,400+ thoughtful shoppers</span></div>
+      </div>
+      <div class="hero-art" aria-label="A curated collection of design-forward everyday objects">
+        <div class="hero-art-glow"></div>
+        <div class="hero-sticker">The<br>good<br>stuff <span>✳</span></div>
+        <div class="hero-object hero-object-one">☕</div>
+        <div class="hero-object hero-object-two">🎧</div>
+        <div class="hero-object hero-object-three">👜</div>
+        <div class="hero-object hero-object-four">📓</div>
+        <div class="hero-caption"><span>01 — OBJECTS FOR EVERY DAY</span><span>CURATED WITH CARE · EST. 2024</span></div>
+      </div>
+      <div class="hero-index">SCROLL TO DISCOVER <span>↓</span></div>
+    </section>
+
+    <section class="values-strip" aria-label="Our values">
+      <span>✳ CONSIDERED DESIGN</span><span>✳ MADE TO LAST</span><span>✳ A LITTLE LESS, A LOT BETTER</span><span>✳ GOOD THINGS, ALWAYS</span>
+    </section>
+
+    <section class="shop-section" id="shop">
+      <div class="section-heading">
+        <div><span class="eyebrow"><span class="eyebrow-line"></span> THE COLLECTION</span><h2>Find your <em>everyday.</em></h2></div>
+        <p>Useful, beautiful, and just a bit unexpected.<br>Consider this your new favorite corner.</p>
+      </div>
+      <div class="shop-toolbar">
+        <div class="category-tabs" id="category-tabs" role="group" aria-label="Filter by category">
+          <button class="category-tab active" data-category="All">All objects <span id="all-count"></span></button>
+          <button class="category-tab" data-category="Home">Home</button>
+          <button class="category-tab" data-category="Lifestyle">Lifestyle</button>
+          <button class="category-tab" data-category="Electronics">Tech</button>
+          <button class="category-tab" data-category="Stationery">Stationery</button>
+        </div>
+        <label class="search-box" id="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="Find something..." aria-label="Search products"><kbd>⌘ K</kbd></label>
+      </div>
+      <div class="product-grid" id="product-grid" aria-live="polite"></div>
+      <div class="empty-state hidden" id="empty-state">No objects found. Try another search.</div>
+    </section>
+
+    <section class="story-section">
+      <div class="story-art"><div class="story-art-shape">✳</div><span>LESS, BUT<br>BETTER.</span><small>NORTHSTAR NOTES — NO. 001</small></div>
+      <div class="story-copy"><span class="eyebrow"><span class="eyebrow-line"></span> A NOTE FROM US</span><h2>Not more stuff.<br><em>More meaning.</em></h2><p>We believe the things you live with should earn their place. So we look for the well-made, the useful, the quietly lovely — and leave the rest behind.</p><a href="#shop" class="text-link">A little more about us <span>↗</span></a></div>
+    </section>
+    <section class="newsletter"><span class="eyebrow">THE GOOD LIST</span><h2>A good thing in your inbox.<br><em>Never the noisy stuff.</em></h2><form id="newsletter-form"><label class="sr-only" for="newsletter-email">Your email address</label><input id="newsletter-email" type="email" placeholder="Your email address" required><button type="submit">Count me in <span>↗</span></button></form><small id="newsletter-message">Thoughtful finds, new arrivals, and the occasional nice note.</small></section>
+  </main>
+  <footer class="site-footer"><a class="wordmark" href="#"><span class="star">✳</span> northstar<span class="wordmark-dot">.</span></a><span>Good things for the everyday. © 2025 Northstar Shop</span><a href="#shop">Back to the good stuff ↑</a></footer>
+
+  <button class="chat-launcher" id="chat-launcher" aria-label="Chat with our shopping assistant"><span>✳</span><span class="chat-launcher-label">Ask us anything</span><span class="chat-pulse"></span></button>
+  <aside class="chat-panel" id="chat-panel" aria-label="Shopping assistant" aria-hidden="true">
+    <div class="chat-header"><div class="assistant-avatar">✳</div><div><strong>A little help?</strong><small>Our shopping assistant · Usually replies instantly</small></div><button class="close-button" id="chat-close" aria-label="Close chat">×</button></div>
+    <div class="chat-messages" id="chat-messages"><div class="chat-message assistant-message"><span class="message-avatar">✳</span><p>Hi there! Looking for something in particular? I can help you find a good thing. ☺</p></div></div>
+    <div class="chat-suggestions"><button>Gift ideas under $50</button><button>Tell me about shipping</button></div>
+    <form class="chat-form" id="chat-form"><label class="sr-only" for="chat-input">Message the shopping assistant</label><input id="chat-input" maxlength="1000" placeholder="Type a message..." autocomplete="off" required><button type="submit" aria-label="Send message">↑</button></form>
+    <div class="chat-disclaimer">AI can make mistakes. Please double-check important details.</div>
+  </aside>
+
+  <div class="overlay hidden" id="overlay"></div>
+  <aside class="bag-panel" id="bag-panel" aria-label="Shopping bag" aria-hidden="true">
+    <div class="panel-heading"><div><span class="eyebrow">YOUR GOOD THINGS</span><h2>Your bag <span id="bag-title-count">(0)</span></h2></div><button class="close-button" id="bag-close" aria-label="Close bag">×</button></div>
+    <div class="shipping-progress"><div class="shipping-copy"><span id="shipping-message">You're $75 away from free shipping</span><span>✳</span></div><div class="progress-track"><div id="shipping-progress-fill"></div></div></div>
+    <div class="bag-items" id="bag-items"></div>
+    <div class="bag-empty" id="bag-empty"><span>✳</span><p>Your bag is taking a little breather.</p><button class="text-link" id="continue-shopping">Find something good <span>↗</span></button></div>
+    <div class="bag-footer" id="bag-footer"><div class="subtotal-row"><span>Subtotal</span><strong id="bag-subtotal">$0.00</strong></div><small>Shipping & taxes calculated at checkout.</small><button class="button button-dark checkout-button" id="checkout-open">Continue to checkout <span>→</span></button><button class="continue-link" id="continue-shopping-footer">Keep looking</button></div>
+  </aside>
+  <div class="modal hidden" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div class="modal-card"><button class="close-button modal-close" id="checkout-close" aria-label="Close checkout">×</button><span class="eyebrow">ALMOST YOURS</span><h2 id="checkout-title">A few little details.</h2><p>This demo saves your order but doesn't charge your card.</p>
+      <form id="checkout-form"><label for="customer-name">Your name</label><input id="customer-name" name="name" autocomplete="name" required minlength="2" maxlength="100"><label for="customer-email">Email address</label><input id="customer-email" name="email" type="email" autocomplete="email" required><button type="submit" class="button button-dark">Place my order <span>→</span></button></form>
+      <div class="checkout-feedback" id="checkout-feedback" role="status"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

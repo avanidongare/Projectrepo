@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: northstar-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: northstar-shop
+  labels:
+    app: northstar-shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: northstar-shop
+  template:
+    metadata:
+      labels:
+        app: northstar-shop
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: shop
+          image: northstar-shop:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DATABASE_PATH
+              value: /data/store.db
+            - name: CHAT_MODEL
+              value: gpt-4o-mini
+            - name: CHAT_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-config
+                  key: chat-api-url
+                  optional: true
+            - name: CHAT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-chat
+                  key: api-key
+                  optional: true
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: northstar-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: northstar-shop
+spec:
+  type: ClusterIP
+  selector:
+    app: northstar-shop
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

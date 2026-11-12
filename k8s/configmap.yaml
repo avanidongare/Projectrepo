@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: northstar-config
+data:
+  # Optional. Leave unset to use the built-in catalog-aware assistant.
+  chat-api-url: ""

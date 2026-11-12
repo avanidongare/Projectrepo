@@ -13,7 +13,10 @@ from typing import Annotated
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, Field
+from pymongo import MongoClient
+
+from app.features import create_feature_router
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_DB = BASE_DIR.parent / "data" / "store.db"
@@ -43,6 +46,26 @@ def initialize_database(db_path: Path) -> None:
     with closing(connect(db_path)) as conn:
         conn.executescript(
             """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS sessions (
+                token_hash TEXT PRIMARY KEY,
+                csrf_token TEXT NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                expires_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS carts (
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                product_id TEXT NOT NULL REFERENCES products(id),
+                quantity INTEGER NOT NULL CHECK (quantity BETWEEN 1 AND 20),
+                PRIMARY KEY (user_id, product_id)
+            );
             CREATE TABLE IF NOT EXISTS products (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -59,7 +82,10 @@ def initialize_database(db_path: Path) -> None:
                 customer_name TEXT NOT NULL,
                 customer_email TEXT NOT NULL,
                 total REAL NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                user_id INTEGER REFERENCES users(id),
+                status TEXT NOT NULL DEFAULT 'processing',
+                tracking_number TEXT
             );
             CREATE TABLE IF NOT EXISTS order_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,6 +97,14 @@ def initialize_database(db_path: Path) -> None:
             );
             """
         )
+        order_columns = {row["name"] for row in conn.execute("PRAGMA table_info(orders)")}
+        if "user_id" not in order_columns:
+            conn.execute("ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)")
+        if "status" not in order_columns:
+            conn.execute("ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'processing'")
+        if "tracking_number" not in order_columns:
+            conn.execute("ALTER TABLE orders ADD COLUMN tracking_number TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)")
         conn.executemany(
             """
             INSERT OR IGNORE INTO products
@@ -84,19 +118,6 @@ def initialize_database(db_path: Path) -> None:
 
 def product_dict(row: sqlite3.Row) -> dict[str, object]:
     return dict(row)
-
-
-class OrderItem(BaseModel):
-    product_id: str = Field(min_length=1, max_length=80)
-    quantity: int = Field(ge=1, le=20)
-
-
-class CreateOrder(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    customer_name: str = Field(min_length=2, max_length=100)
-    customer_email: EmailStr
-    items: list[OrderItem] = Field(min_length=1, max_length=50)
 
 
 class ChatMessage(BaseModel):
@@ -170,12 +191,24 @@ def remote_chat_reply(message: str, products: list[dict[str, object]]) -> str:
         raise HTTPException(status_code=502, detail="The chat service is temporarily unavailable.") from exc
 
 
-def create_app(db_path: Path | None = None) -> FastAPI:
+def create_app(
+    db_path: Path | None = None,
+    mongo_database: object | None = None,
+) -> FastAPI:
     database = db_path or Path(os.getenv("DATABASE_PATH", str(DEFAULT_DB)))
     initialize_database(database)
+    mongo_client = None
+    if mongo_database is None and os.getenv("MONGO_URI"):
+        mongo_client = MongoClient(
+            os.environ["MONGO_URI"], serverSelectionTimeoutMS=2500
+        )
+        mongo_database = mongo_client["northstar"]
 
     app = FastAPI(title="Northstar Shop API", version="1.0.0")
+    if mongo_client is not None:
+        app.add_event_handler("shutdown", mongo_client.close)
     app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+    app.include_router(create_feature_router(database, mongo_database))
 
     @app.get("/", include_in_schema=False)
     def storefront() -> FileResponse:
@@ -219,59 +252,6 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         if row is None:
             raise HTTPException(status_code=404, detail="Product not found")
         return product_dict(row)
-
-    @app.post("/api/orders", status_code=201, tags=["store"])
-    def create_order(order: CreateOrder) -> dict[str, object]:
-        quantities: dict[str, int] = {}
-        for item in order.items:
-            quantities[item.product_id] = quantities.get(item.product_id, 0) + item.quantity
-        if any(quantity > 20 for quantity in quantities.values()):
-            raise HTTPException(status_code=422, detail="Maximum quantity per product is 20")
-
-        conn = connect(database)
-        try:
-            conn.execute("BEGIN IMMEDIATE")
-            order_lines: list[tuple[str, str, int, float]] = []
-            total = 0.0
-            for product_id, quantity in quantities.items():
-                product = conn.execute(
-                    "SELECT id, name, price, stock FROM products WHERE id = ?", (product_id,)
-                ).fetchone()
-                if product is None:
-                    raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
-                if product["stock"] < quantity:
-                    raise HTTPException(
-                        status_code=409, detail=f"Not enough stock for {product['name']}"
-                    )
-                price = float(product["price"])
-                total += price * quantity
-                order_lines.append((product_id, product["name"], quantity, price))
-
-            cursor = conn.execute(
-                "INSERT INTO orders (customer_name, customer_email, total) VALUES (?, ?, ?)",
-                (order.customer_name, str(order.customer_email), round(total, 2)),
-            )
-            order_id = cursor.lastrowid
-            for product_id, name, quantity, price in order_lines:
-                conn.execute(
-                    "INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (order_id, product_id, name, quantity, price),
-                )
-                conn.execute(
-                    "UPDATE products SET stock = stock - ? WHERE id = ?",
-                    (quantity, product_id),
-                )
-            conn.commit()
-        except HTTPException:
-            conn.rollback()
-            raise
-        except sqlite3.Error as exc:
-            conn.rollback()
-            raise HTTPException(status_code=500, detail="Could not place order") from exc
-        finally:
-            conn.close()
-        return {"order_id": order_id, "total": round(total, 2), "currency": "USD"}
 
     @app.post("/api/chat", tags=["assistant"])
     def chat(body: ChatMessage) -> dict[str, str]:

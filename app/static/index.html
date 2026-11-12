@@ -20,6 +20,8 @@
     </nav>
     <div class="header-actions">
       <button class="icon-button search-toggle" aria-label="Search products" title="Search">⌕</button>
+      <button class="account-button" id="account-open">Sign in</button>
+      <button class="account-button hidden" id="admin-open">Admin</button>
       <button class="bag-button" id="bag-open" aria-label="Open shopping bag">Bag <span id="bag-count">0</span></button>
       <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
     </div>
@@ -97,6 +99,76 @@
     <div class="modal-card"><button class="close-button modal-close" id="checkout-close" aria-label="Close checkout">×</button><span class="eyebrow">ALMOST YOURS</span><h2 id="checkout-title">A few little details.</h2><p>This demo saves your order but doesn't charge your card.</p>
       <form id="checkout-form"><label for="customer-name">Your name</label><input id="customer-name" name="name" autocomplete="name" required minlength="2" maxlength="100"><label for="customer-email">Email address</label><input id="customer-email" name="email" type="email" autocomplete="email" required><button type="submit" class="button button-dark">Place my order <span>→</span></button></form>
       <div class="checkout-feedback" id="checkout-feedback" role="status"></div>
+    </div>
+  </div>
+  <div class="modal hidden" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title">
+    <div class="modal-card account-card">
+      <button class="close-button modal-close" id="account-close" aria-label="Close account">×</button>
+      <span class="eyebrow">YOUR NORTHSTAR ACCOUNT</span>
+      <div id="auth-view">
+        <h2 id="account-title">Welcome back.</h2>
+        <p id="auth-description">Sign in to save your bag and keep track of your orders.</p>
+        <form id="account-form">
+          <label for="auth-name" id="auth-name-label" class="hidden">Your name</label>
+          <input id="auth-name" class="hidden" name="name" autocomplete="name" minlength="2" maxlength="100">
+          <label for="auth-email">Email address</label>
+          <input id="auth-email" name="email" type="email" autocomplete="email" required>
+          <label for="auth-password">Password</label>
+          <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="10" maxlength="128" required>
+          <button type="submit" class="button button-dark" id="auth-submit">Sign in <span>→</span></button>
+        </form>
+        <button class="auth-switch" id="auth-switch" type="button">New here? Create an account</button>
+        <div class="checkout-feedback" id="auth-feedback" role="status"></div>
+      </div>
+      <div id="account-view" class="hidden">
+        <h2 id="account-greeting">Your account.</h2>
+        <p>Order history and tracking for your Northstar orders.</p>
+        <div id="order-history" class="order-history"></div>
+        <button class="continue-link" id="account-logout">Sign out</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal hidden" id="reviews-modal" role="dialog" aria-modal="true" aria-labelledby="reviews-title">
+    <div class="modal-card reviews-card">
+      <button class="close-button modal-close" id="reviews-close" aria-label="Close reviews">×</button>
+      <span class="eyebrow">THOUGHTS FROM THE COMMUNITY</span>
+      <h2 id="reviews-title">Product reviews</h2>
+      <div id="reviews-summary" class="reviews-summary"></div>
+      <div id="reviews-list" class="reviews-list"></div>
+      <div id="review-form-area">
+        <form id="review-form" class="review-form">
+          <label for="review-rating">Your rating</label>
+          <select id="review-rating" required><option value="5">★★★★★ — Loved it</option><option value="4">★★★★☆ — Really good</option><option value="3">★★★☆☆ — It's nice</option><option value="2">★★☆☆☆ — Could be better</option><option value="1">★☆☆☆☆ — Not for me</option></select>
+          <label for="review-title">A short title</label><input id="review-title" minlength="2" maxlength="100" required>
+          <label for="review-body">Your review</label><textarea id="review-body" minlength="5" maxlength="2000" rows="3" required></textarea>
+          <button class="button button-dark" type="submit">Share your review <span>→</span></button>
+        </form>
+        <p id="review-signin" class="hidden">Please <button class="inline-button" id="review-signin-button">sign in</button> to leave a review.</p>
+      </div>
+      <div class="checkout-feedback" id="reviews-feedback" role="status"></div>
+    </div>
+  </div>
+  <div class="modal hidden" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+    <div class="modal-card admin-card">
+      <button class="close-button modal-close" id="admin-close" aria-label="Close admin dashboard">×</button>
+      <span class="eyebrow">NORTHSTAR SHOP MANAGEMENT</span><h2 id="admin-title">Admin dashboard</h2>
+      <div class="admin-columns">
+        <section><h3>Products</h3><div id="admin-product-list" class="admin-list"></div>
+          <form id="admin-product-form" class="admin-product-form">
+            <strong id="admin-product-form-title">Add a product</strong>
+            <label for="admin-product-id">Product ID (lowercase, hyphenated)</label><input id="admin-product-id" pattern="[a-z0-9]+(-[a-z0-9]+)*" required>
+            <label for="admin-product-name">Name</label><input id="admin-product-name" required>
+            <label for="admin-product-category">Category</label><input id="admin-product-category" required>
+            <div class="admin-fields"><label>Price<input id="admin-product-price" type="number" min="0" step="0.01" required></label><label>Stock<input id="admin-product-stock" type="number" min="0" step="1" required></label></div>
+            <label for="admin-product-description">Description</label><textarea id="admin-product-description" minlength="5" required></textarea>
+            <div class="admin-fields"><label>Emoji<input id="admin-product-emoji" maxlength="8" value="✳" required></label><label>Rating<input id="admin-product-rating" type="number" min="0" max="5" step="0.1" value="5" required></label></div>
+            <label for="admin-product-color">Color palette</label><select id="admin-product-color"><option>from-lime-300 to-green-600</option><option>from-amber-300 to-orange-500</option><option>from-sky-300 to-blue-600</option><option>from-rose-300 to-pink-600</option><option>from-violet-500 to-indigo-700</option></select>
+            <button type="submit" class="button button-dark">Save product <span>→</span></button><button type="button" class="continue-link hidden" id="admin-cancel-edit">Cancel editing</button>
+          </form>
+        </section>
+        <section><h3>Recent orders</h3><div id="admin-order-list" class="admin-list"></div></section>
+      </div>
+      <div class="checkout-feedback" id="admin-feedback" role="status"></div>
     </div>
   </div>
   <div class="toast" id="toast" role="status"></div>

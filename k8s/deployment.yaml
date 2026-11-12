@@ -40,6 +40,25 @@ spec:
           env:
             - name: DATABASE_PATH
               value: /data/store.db
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-app
+                  key: mongo-uri
+            - name: COOKIE_SECURE
+              value: "false"
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-admin
+                  key: email
+                  optional: true
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-admin
+                  key: password
+                  optional: true
             - name: CHAT_MODEL
               value: gpt-4o-mini
             - name: CHAT_API_URL
@@ -57,6 +76,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 100m
@@ -85,6 +106,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: northstar-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
 ---
 apiVersion: v1
 kind: Service
